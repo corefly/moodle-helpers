@@ -6,9 +6,27 @@ namespace Corefly.Moodle.Converters.Converters;
 
 public class MoodleXmlConverter : IConverter
 {
-    public byte[] Convert(ICollection<Question> questions)
+    public class Options
     {
-        var questionElements = questions.Select((x, i) => CreateQuestionElement(x, i + 1)).ToList();
+        public Options(string baseQuestionName, string generalFeedback, string correctFeedback, string partiallyCorrectFeedback, string incorrectFeedback)
+        {
+            BaseQuestionName = baseQuestionName;
+            GeneralFeedback = generalFeedback;
+            CorrectFeedback = correctFeedback;
+            PartiallyCorrectFeedback = partiallyCorrectFeedback;
+            IncorrectFeedback = incorrectFeedback;
+        }
+
+        public string BaseQuestionName { get; }
+        public string GeneralFeedback { get; }
+        public string CorrectFeedback { get; }
+        public string PartiallyCorrectFeedback { get; }
+        public string IncorrectFeedback { get; }
+    }
+
+    public byte[] Convert(ICollection<Question> questions, Options options)
+    {
+        var questionElements = questions.Select((x, i) => CreateQuestionElement(x, i + 1, options)).ToList();
         var xmlDocument = new XDocument(
             new XDeclaration("1.0", null, null),
             new XElement("quiz", questionElements));
@@ -19,33 +37,28 @@ public class MoodleXmlConverter : IConverter
         return ms.ToArray();
     }
 
-    private static XElement CreateQuestionElement(Question question, int number)
+    private static XElement CreateQuestionElement(Question question, int number, Options options)
     {
         return new XElement("question",
             new XAttribute(XName.Get("type"), "multichoice"),
-            // TODO: Move to param
-            new XElement("name", new XElement("text", $"Тема_8_{number}")),
+            new XElement("name", new XElement("text", $"{options.BaseQuestionName}_{number}")),
             new XElement("questiontext",
                 new XAttribute(XName.Get("format"), "html"),
                 new XElement("text", question.Text)),
             CreateAnswerElements(question),
             new XElement("generalfeedback",
                 new XAttribute(new XAttribute(XName.Get("format"), "html")),
-                // TODO: Move to param
-                new XElement("text", "Изучите раздел 8 \"Экономическая роль государства в Республике Беларусь\" учебника \"Национальная экономика Беларуси\" (под ред. В.Н. Шимова, 5-е изд., 2018 г.).")),
+                new XElement("text", options.GeneralFeedback)),
             new XElement("single", question.IsSingleCorrectAnswer ? "true" : "false"),
             new XElement("correctfeedback",
                 new XAttribute(XName.Get("format"), "html"),
-                // TODO: Move to param
-                new XElement("text", "Ваш ответ верный")),
+                new XElement("text", options.CorrectFeedback)),
             new XElement("partiallycorrectfeedback",
                 new XAttribute(XName.Get("format"), "html"),
-                // TODO: Move to param
-                new XElement("text", "Ваш ответ частично правильный")),
+                new XElement("text", options.PartiallyCorrectFeedback)),
             new XElement("incorrectfeedback",
                 new XAttribute(XName.Get("format"), "html"),
-                // TODO: Move to param
-                new XElement("text", "Ваш ответ неправильный"))
+                new XElement("text", options.IncorrectFeedback))
         );
     }
 
@@ -55,7 +68,7 @@ public class MoodleXmlConverter : IConverter
 
         foreach (var answer in question.Answers)
         {
-            var fractionValue = answer.IsCorrect ? question.CorrectAnswerCost: question.WrongAnswerCost;
+            var fractionValue = answer.IsCorrect ? question.CorrectAnswerCost : question.WrongAnswerCost;
             var answerElement = new XElement("answer",
                 new XAttribute(XName.Get("fraction"), fractionValue),
                 new XElement("text", answer.Text));

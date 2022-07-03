@@ -17,7 +17,15 @@ internal class Program
             config.AddBranch("convert", convert =>
             {
                 convert.AddCommand<DocxToMoodleXmlConvertCommand>("docx-to-moodle-xml")
-                    .WithDescription("Convert docx to moodle xml");
+                    .WithDescription("Convert docx to moodle xml")
+                    .WithExample(new[]
+                    {
+                        "convert",
+                        "docx-to-moodle-xml",
+                        "c:\\my-folder\\Questions.docx",
+                        "--baseQuestionName", "Part_1_",
+                        "--generalfeedback", "Try learn part 1 better than now"
+                    });
             });
         });
 

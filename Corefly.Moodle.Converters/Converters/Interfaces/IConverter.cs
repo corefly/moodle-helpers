@@ -4,5 +4,5 @@ namespace Corefly.Moodle.Converters.Converters.Interfaces;
 
 public interface IConverter
 {
-    public byte[] Convert(ICollection<Question> questions);
+    public byte[] Convert(ICollection<Question> questions, MoodleXmlConverter.Options options);
 }
